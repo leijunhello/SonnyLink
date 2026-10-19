@@ -119,7 +119,7 @@ fun BackupScreen(onBack: () -> Unit) {
             value = url,
             onValueChange = { url = it; persist() },
             label = { Text("WebDAV 地址") },
-            placeholder = { Text("http://192.168.1.10:5006/sonnylink") },
+            placeholder = { Text("http://NAS-IP:5006/sonnylink") },
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
             modifier = Modifier.fillMaxWidth(),
