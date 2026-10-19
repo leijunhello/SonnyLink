@@ -162,7 +162,11 @@ class LiveviewEngine(
      *
      * 为什么不直接拿解码后的 Bitmap：它被引擎复用（inBitmap），
      * 交给别的线程保存必然撕裂或拿到别的帧。字节是一次性拷贝，安全且无损。
+     *
+     * 必须 @Volatile：UI 线程写、取景线程读，不加的话写入可能永远不被看到，
+     * 表现为「点了截图没反应」—— 而且偶发，最难查。
      */
+    @Volatile
     private var captureSink: ((ByteArray) -> Unit)? = null
 
     fun requestCapture(sink: (ByteArray) -> Unit) {

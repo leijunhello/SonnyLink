@@ -28,6 +28,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -52,6 +53,7 @@ import com.sonnyapp.theme.TextLo
 import com.sonnyapp.theme.TextMid
 import com.sonnyapp.theme.WarnAmber
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /**
@@ -77,6 +79,7 @@ fun BackupScreen(onBack: () -> Unit) {
     var auto by remember { mutableStateOf(initial.auto) }
     var probeMsg by remember { mutableStateOf("") }
     var probing by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         BackupService.init(ctx)
@@ -170,12 +173,12 @@ fun BackupScreen(onBack: () -> Unit) {
                 probeMsg = "连接中…"
                 val cfg = BackupConfig(url = url, user = user, pass = pass, dir = dir, auto = auto)
                 persist()
-                // 网络请求不能放主线程
-                Thread {
-                    val err = BackupService.probe(cfg)
+                // 网络请求必须离开主线程；结果回到主线程再写状态
+                scope.launch {
+                    val err = withContext(Dispatchers.IO) { BackupService.probe(cfg) }
                     probeMsg = err ?: "连接成功，目录可写"
                     probing = false
-                }.start()
+                }
             }
             BackupAction("立即上传", enabled = !running && items.isNotEmpty()) {
                 BackupService.uploadNow()
